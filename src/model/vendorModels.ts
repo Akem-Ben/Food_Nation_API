@@ -3,19 +3,19 @@ import {database} from '../configurations/';
 import {FoodInstance} from './foodModel';
 
 
-interface VendorAttributes {
+export interface VendorAttributes {
     id: string;
-    email: string;
-    restaurant_name: string;
-    name_of_owner: string;
+    email?: string;
+    restaurant_name?: string;
+    name_of_owner?: string;
     company_name: string;
     password: string;
-    salt: string;
-    address: string;
-    phone_no: string;
+    address?: string;
+    phone_no?: string;
     isAvailable: boolean;
     role: string;
-    cover_image: string;
+    salt: string;
+    cover_image?: string;
     rating: number;
     orders: number
 }
@@ -30,38 +30,41 @@ VendorInstance.init({
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-            notNull: {
-                msg: "Email is required"
-            },
-            isEmail: {
-                msg: "Email is invalid"
-            }
-        }
+        allowNull: true,
+        // unique: true,
+        // validate: {
+        //     notNull: {
+        //         msg: "Email is required"
+        //     },
+        //     isEmail: {
+        //         msg: "Email is invalid"
+        //     }
+        // }
+    },
+    salt: {
+        type: DataTypes.STRING,
     },
     restaurant_name: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: {
-              msg: "restaurant name is required",
-            },
-          },
+        allowNull: true,
+        // validate: {
+        //     notNull: {
+        //       msg: "restaurant name is required",
+        //     },
+        //   },
     },
     name_of_owner: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: {
-              msg: "ownder's name is required",
-            },
-          },
+        allowNull: true,
+        // validate: {
+        //     notNull: {
+        //       msg: "ownder's name is required",
+        //     },
+        //   },
     },
     company_name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     password: {
         type: DataTypes.STRING,
@@ -75,37 +78,33 @@ VendorInstance.init({
             },
           },
     },
-    salt: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
     address: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     phone_no: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate:{
-            notNull:{
-                msg: 'Phone Number is required'
-            },
-            notEmpty:{
-                msg: 'Phone Number is required'
-            }
-        }
+        allowNull: true,
+        // validate:{
+        //     notNull:{
+        //         msg: 'Phone Number is required'
+        //     },
+        //     notEmpty:{
+        //         msg: 'Phone Number is required'
+        //     }
+        // }
     },
     isAvailable: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        // allowNull: false,
     },
     role: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     cover_image: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     rating: {
         type: DataTypes.INTEGER,

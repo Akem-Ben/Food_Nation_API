@@ -3,9 +3,12 @@ import dotenv from 'dotenv';
 
 dotenv.config()
 
-const {DEV_DB_NAME,
+export const {DEV_DB_NAME,
     DEV_DB_USERNAME,
-    DEV_DB_PASSWORD} = process.env
+    DEV_DB_PASSWORD,
+    APP_SECRET,
+    GMAI_USER,
+    GMAIL_PASSWORD} = process.env
 
 export const database = new Sequelize(
     DEV_DB_NAME!, // DB_NAME!, //database name
@@ -25,3 +28,4 @@ export const database = new Sequelize(
       },
     }
   );
+
