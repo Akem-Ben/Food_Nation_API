@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import {db} from './configurations';
+import {database} from './configurations';
 import {HttpError} from 'http-errors';
 import config from './configurations/dbConfig';
 
@@ -9,7 +9,7 @@ const app = express()
 dotenv.config()
 const { PORT } = config;
 console.log(PORT)
-db.sync().then(() => {
+database.sync().then(() => {
     console.log(`Database Connected`)
 }).catch((err:HttpError)=>{
     console.log(err)
