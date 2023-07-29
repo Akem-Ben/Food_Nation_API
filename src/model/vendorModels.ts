@@ -31,15 +31,6 @@ VendorInstance.init({
     email: {
         type: DataTypes.STRING,
         allowNull: true,
-        // unique: true,
-        // validate: {
-        //     notNull: {
-        //         msg: "Email is required"
-        //     },
-        //     isEmail: {
-        //         msg: "Email is invalid"
-        //     }
-        // }
     },
     salt: {
         type: DataTypes.STRING,
@@ -47,20 +38,10 @@ VendorInstance.init({
     restaurant_name: {
         type: DataTypes.STRING,
         allowNull: true,
-        // validate: {
-        //     notNull: {
-        //       msg: "restaurant name is required",
-        //     },
-        //   },
     },
     name_of_owner: {
         type: DataTypes.STRING,
         allowNull: true,
-        // validate: {
-        //     notNull: {
-        //       msg: "ownder's name is required",
-        //     },
-        //   },
     },
     company_name: {
         type: DataTypes.STRING,
@@ -85,18 +66,9 @@ VendorInstance.init({
     phone_no: {
         type: DataTypes.STRING,
         allowNull: true,
-        // validate:{
-        //     notNull:{
-        //         msg: 'Phone Number is required'
-        //     },
-        //     notEmpty:{
-        //         msg: 'Phone Number is required'
-        //     }
-        // }
     },
     isAvailable: {
         type: DataTypes.BOOLEAN,
-        // allowNull: false,
     },
     role: {
         type: DataTypes.STRING,
