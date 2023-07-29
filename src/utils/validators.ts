@@ -19,6 +19,14 @@ export const updateSchema = Joi.object().keys({
     phone_no: Joi.string().optional(),
     cover_image: Joi.string().optional()
 })
+
+export const foodCreateSchema = Joi.object().keys({
+    name: Joi.string().required(),
+    price: Joi.string().required(),
+    image: Joi.string().required(),
+    ready_time: Joi.string().required(),
+    description: Joi.string().required()
+})
 export const forgotSchema = Joi.object().keys({
     email: Joi.string().required(),
     password: Joi.string().required(),
@@ -38,15 +46,3 @@ export const option = {
     }
 }
 
-export const SaltGenerator = async()=>{
-    return bcrypt.genSalt()
-}
-
-export const passWordGenerator = async(restaurant_name:string)=>{
-    const mixup = restaurant_name += Math.floor(1000 + Math.random() * 90000)
-    return mixup
-}
-
-export const hashPassword = async (password:string, salt:string)=>{
-    return await bcrypt.hash(password, salt)
-}

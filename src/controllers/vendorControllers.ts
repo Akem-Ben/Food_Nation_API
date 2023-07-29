@@ -2,20 +2,20 @@ import {Request, Response, NextFunction} from 'express';
 import {JwtPayload} from 'jsonwebtoken';
 import {v4} from 'uuid';
 import axios from 'axios';
-import {GenerateSignature, GenerateVerifySignature, validatePassword} from '../utils/vendorAuths';
+import {GenerateSignature, GenerateSignatureForVerify, checkPassword, GenerateSalt,
+    passWordGenerator,
+    hashPassword} from '../utils/helpers';
 import {axiosVerifyVendor} from '../utils/helpers';
 import {vendorSchema, option,
-    SaltGenerator,
     loginSchema,
-    passWordGenerator,
-    updateSchema,
-    hashPassword} from '../utils/validators';
+    updateSchema, foodCreateSchema} from '../utils/validators';
 import {sendmail,
     emailHtml} from '../utils/notification'
 import { VendorInstance, VendorAttributes } from '../model/vendorModels';
 import { GMAI_USER } from '../configurations';
 import {VendorPayLoad} from '../interface';
 import {HttpError} from 'http-errors';
+import { FoodInstance } from '../model/foodModel';
 
 export const verifyVendor = async (req:Request, res:Response)=>{
     try{
@@ -38,7 +38,7 @@ export const verifyVendor = async (req:Request, res:Response)=>{
                 })
             }
           const userDetails = response.findCompany
-          const token = await GenerateVerifySignature(userDetails.reg_no)
+          const token = await GenerateSignatureForVerify(userDetails.reg_no)
           res.cookie('token', token)
         // res.clearCookie('cookies')
           return res.status(200).json({
@@ -74,7 +74,7 @@ export const registerVendor = async(req:JwtPayload, res:Response)=>{
                 msg: `Email/Restaurant name already Exists`
             })
         }
-        const salt = await SaltGenerator()
+        const salt = await GenerateSalt()
         const password = await passWordGenerator(restaurant_name)
         const hash = await hashPassword(password, salt)
         const html = emailHtml(email, password)
@@ -137,10 +137,9 @@ export const vendorLogin = async (req:Request, res:Response) => {
 
     if(!Vendor) return res.status(404).json({msg:`Vendor not Found`})
 
-        const validation = await validatePassword(
+        const validation = await checkPassword(
           password,
-          Vendor.password,
-          Vendor.salt
+          Vendor.password
         );
   
         if (validation) {
@@ -177,23 +176,22 @@ export const vendorChangeLoginPassword = async (req:JwtPayload, res:Response) =>
                 message: `Password Mismatch`
             })
         }
-        const email = req.vendor.email;
-        console.log(req.vendor)
-        const vendor:any = await VendorInstance.findOne({where: { email: email },
+        const userId = req.vendor.id;
+        const vendor:any = await VendorInstance.findOne({where: { id: userId },
         }) as unknown as VendorAttributes;
           const token = await GenerateSignature({
             id: vendor.id,
             email: vendor.email
           })
           res.cookie('token', token)
-          const new_salt = await SaltGenerator()
+          const new_salt = await GenerateSalt()
           const hash = await hashPassword(new_password, new_salt)
           const updatedPassword = await VendorInstance.update(
             {
              password:hash,
              salt: new_salt 
             },
-            { where: { email: email } }
+            { where: { id: userId } }
           ) as unknown as VendorAttributes;
        
           if (updatedPassword) {
@@ -255,7 +253,7 @@ export const vendorChangeLoginPassword = async (req:JwtPayload, res:Response) =>
 //             console.log(err.message)
 //             return res.status(500).json({message: `Internal Server Error`})
 //         }
-//     }
+//}
 
 export const getAllVendors = async(req:JwtPayload, res:Response)=>{
     try{
@@ -338,10 +336,10 @@ export const vendorEditProfile = async (req: JwtPayload, res: Response) => {
     }
 }
 
-export const deleteVendor = async (req:Request, res:Response)=>{
+export const deleteVendor = async (req:JwtPayload, res:Response)=>{
     try{
         const userEmail = req.query.email
-        const delUser = await VendorInstance.destroy({where: {email:userEmail}})
+        const delUser = await VendorInstance.destroy({where: {email:userEmail}}) as unknown as VendorAttributes
         if(delUser){
             const allUsers = await VendorInstance.findAll({}) 
         return res.status(200).json({msg: `Deleted successfully`, allUsers})
@@ -352,4 +350,80 @@ export const deleteVendor = async (req:Request, res:Response)=>{
     }
 }
 
-  
+export const getSingleVendor = async (req:JwtPayload, res:Response)=>{
+    try{
+        const userId = req.vendor.id;
+        const vendor = await VendorInstance.findOne({where: {id:userId}})
+        if(!vendor) return res.status(404).json({msg: `Vendor not found`})
+        return res.status(200).json({msg: `Here is your profile`, vendor})
+    }catch(err:any){
+        console.log(err.message)
+        return res.status(500).json({msg: `Internal Server Error`})
+    }
+}
+
+export const getSingleVendorProfile = async (req:JwtPayload, res:Response)=>{
+    try{
+        const userId = req.vendor.id;    
+       const Vendor = await VendorInstance.findOne({
+            where:{id:userId},
+        include: [
+            {
+                model:FoodInstance,
+                as: 'food',
+                attributes:["id", "name", "description", "order_count", "ready_time", "image", "price", "rating", "vendorId"]
+            }
+        ]})as unknown as VendorAttributes;
+        if(!Vendor) return res.status(404).json({msg: `Vendor not found`})
+        return res.status(200).json({
+            Vendor
+        })
+    }catch(err:any){
+        console.log(err.message)
+        return res.status(500).json({msg: `Internal Server Error`})
+    }
+}
+
+export const vendorCreateFood = async (req:JwtPayload, res:Response)=>{
+    try{
+        const creatorId = req.vendor.id;
+        const foodId = v4()
+        const {name, price, image, ready_time, description} = req.body;
+        const validateInput = foodCreateSchema.validate(req.body, option)
+        if(validateInput.error){
+            console.log(validateInput.error)
+            return res.status(400).json({
+                Error: validateInput.error.details[0].message,
+              });
+        }
+        const vendor = await VendorInstance.findOne({where: {id:creatorId}})
+        if(vendor){
+        const newFood = await FoodInstance.create({
+            id: foodId,
+            order_count: 0,
+            name,
+            date_created: new Date(),
+            date_updated: new Date(),
+            vendorId: creatorId,
+            price,
+            image,
+            ready_time,
+            isAvailable: true,
+            rating: 0,
+            description
+        })
+        return res.status(200).json({
+            message: `Food successfully created`,
+            newFood
+        })
+    }
+    return res.status(404).json({
+        message: `You are not on our database`
+    })
+    }catch(err:any){
+        console.log(err)
+        return res.status(500).json({
+            msg: `Internal Server Error`
+        })
+    }
+}
